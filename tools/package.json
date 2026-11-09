@@ -1,0 +1,7 @@
+{
+  "name": "azc-site-tools",
+  "private": true,
+  "type": "module",
+  "scripts": { "images": "node build-images.mjs" },
+  "devDependencies": { "sharp": "^0.33.5" }
+}
