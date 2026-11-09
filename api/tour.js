@@ -2,8 +2,11 @@
 //
 // Environment variables (set in Vercel > Project > Settings > Environment Variables):
 //   RESEND_API_KEY   required. A Resend API key with sending access.
-//   LEAD_FROM_EMAIL  required. A sender on a domain verified in Resend,
+//   LEAD_FROM_EMAIL  optional. A sender on a domain verified in Resend,
 //                    for example "AZ Cardominiums <leads@azcardominiums.com>".
+//                    If unset, the first verified domain on the Resend account is
+//                    used as "AZ Cardominiums <leads@that-domain>" (needs a full
+//                    access API key so the function can list domains).
 //   LEAD_TO_EMAIL    optional. Where leads go. Defaults to AzCardominiums@gmail.com.
 //                    Separate several addresses with commas.
 
@@ -29,6 +32,22 @@ function originAllowed(origin) {
   if (ALLOWED_ORIGINS.includes(origin)) return true;
   // Vercel preview deployments for this project
   return /^https:\/\/azcardominiums-[a-z0-9-]+\.vercel\.app$/.test(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin);
+}
+
+let cachedFrom = null;
+
+// Finds a sender on the first verified domain in the Resend account.
+async function resolveFrom(apiKey) {
+  if (process.env.LEAD_FROM_EMAIL) return process.env.LEAD_FROM_EMAIL;
+  if (cachedFrom) return cachedFrom;
+  const r = await fetch('https://api.resend.com/domains', { headers: { Authorization: `Bearer ${apiKey}` } });
+  if (!r.ok) throw new Error('Could not list Resend domains (' + r.status + '). Set LEAD_FROM_EMAIL.');
+  const json = await r.json();
+  const domain = (json.data || []).find((d) => d.status === 'verified');
+  if (!domain) throw new Error('No verified Resend domain found. Set LEAD_FROM_EMAIL.');
+  cachedFrom = `AZ Cardominiums <leads@${domain.name}>`;
+  console.log('Tour form: sending from', cachedFrom);
+  return cachedFrom;
 }
 
 module.exports = async function handler(req, res) {
@@ -61,10 +80,16 @@ module.exports = async function handler(req, res) {
   }
 
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.LEAD_FROM_EMAIL;
   const to = (process.env.LEAD_TO_EMAIL || DEFAULT_TO).split(',').map((s) => s.trim()).filter(Boolean);
-  if (!apiKey || !from) {
-    console.error('Tour form: RESEND_API_KEY or LEAD_FROM_EMAIL is not set');
+  if (!apiKey) {
+    console.error('Tour form: RESEND_API_KEY is not set');
+    return res.status(500).json({ ok: false, error: 'Email is not configured' });
+  }
+  let from;
+  try {
+    from = await resolveFrom(apiKey);
+  } catch (err) {
+    console.error('Tour form:', err.message);
     return res.status(500).json({ ok: false, error: 'Email is not configured' });
   }
 

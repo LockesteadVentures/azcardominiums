@@ -49,7 +49,7 @@ Set these in Vercel > azcardominiums > Settings > Environment Variables, then re
 | Variable | Required | Example |
 |---|---|---|
 | `RESEND_API_KEY` | yes | a Resend API key with sending access |
-| `LEAD_FROM_EMAIL` | yes | `AZ Cardominiums <leads@your-verified-domain.com>` (must use a domain verified in Resend) |
+| `LEAD_FROM_EMAIL` | no | `AZ Cardominiums <leads@your-verified-domain.com>`. If unset, the function uses the first verified domain in your Resend account (needs a full access key). |
 | `LEAD_TO_EMAIL` | no | defaults to `AzCardominiums@gmail.com`; separate several addresses with commas |
 
 From the terminal (run in this folder; it prompts you for the value):
