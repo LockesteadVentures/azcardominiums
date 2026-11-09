@@ -10,6 +10,8 @@ site/
   img/              optimized photos and logo (generated, see below)
   fonts/            self-hosted Bebas Neue, Barlow, Barlow Condensed
   robots.txt, sitemap.xml, site.webmanifest, favicons, _headers
+api/
+  tour.js           emails tour requests through Resend (Vercel function)
 tools/
   build-images.mjs  regenerates site/img from assets/images
 ```
@@ -38,17 +40,27 @@ Look for the `PRICE TABLE` comment in `site/index.html`. Each row looks like thi
 - `--w` sets the width of the red bar: square feet divided by 2,000, as a percent (for example 1,200 / 2,000 = 60%).
 - If sizes change, update the matching options in the form's "Interested in" dropdown (search for `f-interest`). Also check the meta description and JSON-LD in the `<head>`, which mention the 450 to 2,000 sq ft range.
 
-## Set the form endpoint
+## Tour form (Resend)
 
-Open `site/js/main.js` and fill in the value at the top:
+The form posts to `/api/tour`, a Vercel function in `api/tour.js`. The function validates the lead, drops spam caught by the hidden honeypot field (`company`), and emails the lead through Resend. Replying to that email goes straight to the visitor.
 
-```js
-const FORM_ENDPOINT = 'https://formspree.io/f/yourFormId';
+Set these in Vercel > azcardominiums > Settings > Environment Variables, then redeploy:
+
+| Variable | Required | Example |
+|---|---|---|
+| `RESEND_API_KEY` | yes | a Resend API key with sending access |
+| `LEAD_FROM_EMAIL` | yes | `AZ Cardominiums <leads@your-verified-domain.com>` (must use a domain verified in Resend) |
+| `LEAD_TO_EMAIL` | no | defaults to `AzCardominiums@gmail.com`; separate several addresses with commas |
+
+From the terminal (run in this folder; it prompts you for the value):
+
+```bash
+vercel env add RESEND_API_KEY production
 ```
 
-This works with any service that accepts a standard form POST and returns JSON (Formspree, Basin, Getform and others). While it's empty, submitting opens the visitor's email app with a prefilled message to AzCardominiums@gmail.com. Without JavaScript, the form posts to a `mailto:` link.
+To use a form service instead (Formspree and others), set `FORM_ENDPOINT` at the top of `site/js/main.js` to its URL. If `FORM_ENDPOINT` is empty, the form opens the visitor's email app with a prefilled message instead. Without JavaScript, the form falls back to a `mailto:` link.
 
-The form includes a hidden honeypot field named `company`. Submissions that fill it in are dropped quietly.
+The function only accepts posts from azcardominiums.com, azcardominiums.vercel.app and this project's preview URLs. If the domain changes, update `ALLOWED_ORIGINS` in `api/tour.js`.
 
 ## Update photos
 
@@ -79,6 +91,6 @@ These are marked `TODO (OPEN item N)` in the code.
 4. Electrical capacity: not stated, to be confirmed with the City of Marana.
 5. Vector logo: swap the PNG for an SVG when it's available (header, footer and favicons).
 6. Higher resolution photos: current originals are about 1,400 px wide.
-7. Form endpoint (above), Search Console and Business Profile.
+7. Resend env vars for the tour form (above), Search Console and Business Profile.
 8. Hosting and DNS.
 9. Privacy policy page: link it in the footer (needed for the form).

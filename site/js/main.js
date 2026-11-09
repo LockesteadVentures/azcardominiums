@@ -1,12 +1,13 @@
 /* AZ Cardominiums: tour form and mobile bar. No dependencies. */
 
 /* ==========================================================================
-   CONFIG: paste your form service URL here (Formspree, Basin, Getform, etc).
-   Example: 'https://formspree.io/f/abcdwxyz'
+   CONFIG: where the tour form posts.
+   '/api/tour' is the Vercel function in /api/tour.js that emails the lead
+   through Resend. Any service that accepts a urlencoded POST and returns
+   JSON (Formspree, Basin, etc) also works here.
    Leave it empty to fall back to a prefilled email to AzCardominiums@gmail.com.
-   TODO (OPEN item 7): set the real form endpoint before launch.
    ========================================================================== */
-const FORM_ENDPOINT = '';
+const FORM_ENDPOINT = '/api/tour';
 
 const CONTACT_EMAIL = 'AzCardominiums@gmail.com';
 
@@ -110,7 +111,7 @@ const CONTACT_EMAIL = 'AzCardominiums@gmail.com';
       try {
         const res = await fetch(FORM_ENDPOINT, {
           method: 'POST',
-          body: data,
+          body: new URLSearchParams(data),
           headers: { Accept: 'application/json' },
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
