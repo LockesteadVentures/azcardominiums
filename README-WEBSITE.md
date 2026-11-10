@@ -33,7 +33,7 @@ All copy is plain text in `site/index.html`, in page order. Each section starts 
 Look for the `PRICE TABLE` comment in `site/index.html`. Each row looks like this:
 
 ```html
-<tr role="row" style="--w:22.5%"><th ...>Size 1</th><td ...>450 sq ft</td><td ...>2</td><td ...>$156,000</td></tr>
+<tr role="row" style="--w:22.5%"><th ...>Size 1</th><td ...>450 sq ft</td><td ...>2</td><td ...>$117,000</td></tr>
 ```
 
 - Change the text in the cells to change the size, square feet, bay count or price.
